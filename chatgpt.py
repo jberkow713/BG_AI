@@ -1,5 +1,5 @@
 import openai
-api_key = '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'
+from api import api_key
 
 def answer(max_tokens):
     question = input('What is your question?\n') 
