@@ -279,34 +279,32 @@ class Player:
         moves = []
         if self.color =='red':
             end = start + die
-            if self.furthest_piece!=None:
-                if self.furthest_piece+die>=25:                    
-                    self.clear_dict()
-                    self.populate_Dict(self.board)
-                    if self.Red_Pieces!= {}:
-                        self.furthest_piece = min([x for x in self.Red_Pieces])                    
-                        self.board[self.furthest_piece].remove(1)
-                        self.take_off=True
-                        self.off_board = self.board
-                    self.redraw()
-                    self.clear_dict()
-                    self.populate_Dict(self.board)                                  
-                    return            
+            if self.furthest_piece!=None and self.furthest_piece+die>=25:                                   
+                self.clear_dict()
+                self.populate_Dict(self.board)
+                if self.Red_Pieces!= {}:
+                    self.furthest_piece = min([x for x in self.Red_Pieces])                    
+                    self.board[self.furthest_piece].remove(1)
+                    self.take_off=True
+                    self.off_board = self.board
+                self.redraw()
+                self.clear_dict()
+                self.populate_Dict(self.board)                                  
+                return            
         elif self.color =='black':
             end = start-die
-            if self.furthest_piece!=None:
-                if self.furthest_piece-die<=0:                    
-                    self.clear_dict()
-                    self.populate_Dict(self.board)
-                    if self.Black_Pieces!={}:
-                        self.furthest_piece = max([x for x in self.Black_Pieces])                    
-                        self.board[self.furthest_piece].remove(2)
-                        self.take_off=True
-                        self.off_board = self.board
-                    self.redraw()
-                    self.clear_dict()
-                    self.populate_Dict(self.board)                 
-                    return        
+            if self.furthest_piece!=None and self.furthest_piece-die<=0:                    
+                self.clear_dict()
+                self.populate_Dict(self.board)
+                if self.Black_Pieces!={}:
+                    self.furthest_piece = max([x for x in self.Black_Pieces])                    
+                    self.board[self.furthest_piece].remove(2)
+                    self.take_off=True
+                    self.off_board = self.board
+                self.redraw()
+                self.clear_dict()
+                self.populate_Dict(self.board)                 
+                return        
         if self.spot_open(end)==True:                
             moves.append(end)        
         return moves
@@ -555,7 +553,23 @@ class Player:
             else:
                 break
         return pip_dict[pips[idx-1]]
-        
+    def Eval_Board_New(self,board):
+        if self.can_remove == False:
+            self.clear_dict()
+            self.populate_Dict(board)
+            blocks = 0
+            singles = 0
+            if self.color == 'red':
+                pieces = copy.deepcopy(self.Red_Pieces)                                          
+            else:
+                pieces = copy.deepcopy(self.Black_Pieces)                
+            for v in pieces.values():
+                if v >1:
+                    blocks +=1
+                else:
+                    singles +=1
+            return str([blocks,singles])        
+
     def Matrix_Eval_Board_4(self, board):
         # Using pip differential function, block differential, and rail count differential
         # To populate an array of [0,0,0] into for example [1,2,1], etc...to evaluate a given
@@ -596,7 +610,7 @@ running = True
 Games = 0
 
 while running:    
-    if Games ==500:
+    if Games ==1000:
         print(Red_wins/Black_wins)                            
         break
     
@@ -606,15 +620,18 @@ while running:
             sys.exit()
     
     P1 = Player('red',board)
-    P1.Random_Move(reinforced=True,File='Scores_10.json',Func=P1.Matrix_Eval_Board_4)
+    # P1.Random_Move(reinforced=True,File='Scores_10.json',Func=P1.Matrix_Eval_Board_4)
+    P1.Random_Move()
+
     # print(P1.stored_boards)    
     board = P1.board
-    conversion = P1.Matrix_Eval_Board_4(board)
+    conversion = P1.Eval_Board_New(board)
+    # prevent breaking in end-game
     if conversion!=None:
         Red_Moves.append(conversion)
 
     if P1.win==True:
-        P1.record_eval('Scores_10.json', Red_Moves, Black_Moves)                       
+        P1.record_eval('Scores_11.json', Red_Moves, Black_Moves)                       
         Red_wins+=1
         Games +=1
         print(f'Red Wins : {Red_wins}, Black Wins:{Black_wins}')
@@ -626,12 +643,12 @@ while running:
     P2 = Player('black',board)      
     P2.Random_Move()
     board = P2.board
-    conversion = P2.Matrix_Eval_Board_4(board)
+    conversion = P2.Eval_Board_New(board)
     if conversion!=None:
         Black_Moves.append(conversion)
 
     if P2.win==True:
-        P2.record_eval('Scores_10.json', Black_Moves, Red_Moves)               
+        P2.record_eval('Scores_11.json', Black_Moves, Red_Moves)               
         Black_wins+=1
         Games+=1 
         print(f'Red Wins : {Red_wins}, Black Wins:{Black_wins}')                                                   
@@ -640,5 +657,5 @@ while running:
         board = P2.generate_random_board()     
         
     #  Optional Time parameter to view changing board states
-    # time.sleep(.1)       
+    # time.sleep(.5)       
     p.display.flip()
